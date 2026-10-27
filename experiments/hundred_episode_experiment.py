@@ -4,6 +4,9 @@ import numpy as np
 from or_gym.envs.supply_chain.inventory_management import (
     InvManagementBacklogEnv,
 )
+from pathlib import Path
+import csv
+import matplotlib.pyplot as plt
 
 NUM_EPISODES = 100
 
@@ -49,3 +52,48 @@ print(f"Maximum reward: {np.max(episode_rewards):.2f}")
 print(f"Average backlog days: {np.mean(episode_backlogs):.2f}")
 
 env.close()
+
+
+results_directory = Path("results")
+results_directory.mkdir(exist_ok=True)
+
+csv_path = results_directory / "hund_episode_results.csv"
+
+with open(csv_path, "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Episode", "Total Reward", "Backlog Days"])
+
+    for i, (reward, backlog) in enumerate(
+        zip(episode_rewards, episode_backlogs), start=1
+    ):
+        writer.writerow([i, reward, backlog])
+
+plt.figure(figsize=(10, 6))
+
+plt.hist(
+    episode_rewards,
+    bins=10,
+    edgecolor="black"
+)
+
+mean_reward = np.mean(episode_rewards)
+
+plt.axvline(
+    mean_reward,
+    linestyle="--",
+    linewidth=2,
+    label=f"Average: {mean_reward:.2f}"
+)
+
+plt.title("Distribution of Total Rewards for Fixed Ordering Policy (100 Episodes)")
+plt.xlabel("Total Episode Reward")
+plt.ylabel("Number of Episodes")
+plt.yticks(range(0, 21, 2))
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+
+plt.savefig(results_directory / "hund_episode_rewards.png", dpi=300)
+plt.close()
+
+print("\nResults saved successfully!")
